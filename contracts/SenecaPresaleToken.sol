@@ -15,7 +15,15 @@ contract MyToken is ERC20, Pausable, Multicall, AccessControl {
     // Upper cap of USD 4294 
     uint32 public tokenCostMilliCents;
     uint32 public referralMilliPercentage;
-    uint32 public bonusMilliPercentage;
+    uint32 public minMilliTokenContribution;
+    uint32 public maxMilliTokenContribution;
+
+    struct bonus{
+        uint32 amount;
+        uint32 percentage;
+    }
+
+    bonus[] public bonusValues;
 
     // Upper cap of 1.8446744e+16
     uint64 public maxTotalSupply;
@@ -88,15 +96,25 @@ contract MyToken is ERC20, Pausable, Multicall, AccessControl {
     }
 
     function setRound( 
-        address receiver,
+        address distributor,
         uint256 amount,
-        uint32 tokenCost,
-        uint32 referralPercentage,
-        uint32 bonusPercentage
+        uint32 _tokenCostMilliCents,
+        uint32 _referralMilliPercentage,
+        uint32 _minMilliTokenContribution,
+        uint32 _maxMilliTokenContribution,
+        uint32[] memory milliAmounts,
+        uint32[] memory milliPercentages
     ) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        _mint(receiver, amount);
-        tokenCostMilliCents = tokenCost;
-        referralMilliPercentage = referralPercentage;
-        bonusMilliPercentage = bonusPercentage;
+        require(milliAmounts.length == milliPercentages.length);
+
+        _mint(distributor, amount);
+        tokenCostMilliCents = _tokenCostMilliCents;
+        referralMilliPercentage = _referralMilliPercentage;
+        minMilliTokenContribution = _minMilliTokenContribution;
+        maxMilliTokenContribution = _maxMilliTokenContribution;
+
+        for(uint i = 0; i< milliAmounts.length; i++){
+            bonusValues.push(bonus({amount : milliAmounts[i], percentage : milliPercentages[i]}));
+        }
     }
 }
