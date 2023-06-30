@@ -47,7 +47,7 @@ contract SenecaPresaleToken is ERC20, Pausable, Multicall, AccessControl {
     }
 
     /**
-    * @notice Bonus percentages based on the initial USD amount bought.
+    * @notice Bonus percentages based on the initial token amount bought.
     */
     bonus[] public bonusValues;
 
