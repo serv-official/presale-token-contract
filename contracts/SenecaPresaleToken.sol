@@ -15,23 +15,23 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 contract SenecaPresaleToken is ERC20, Pausable, Multicall, AccessControl {
     
     /**
-    * @dev Only address with Distributor Role can tranfer tokens and approve allowance. 
+    * @dev Only an address with Distributor Role can transfer tokens and approve allowance. 
     */
     bytes32 public constant DISTRIBUTOR_ROLE = keccak256("DISTRIBUTOR_ROLE");
     
     /**
-    * @dev All addresses can burn when this flag is set true. 
+    * @dev All addresses can burn when this flag is set to true. 
     */
     bool public burnAllowed;
 
     /**
-    * @title pSNCA Token cost in milli Cents.
+    * @title pSNCA Token cost in milli cents.
     * @dev Upper limit of USD 4294.
     */
     uint32 public tokenCostMilliCents;
 
     /**
-    * @title Extra milli percentage paid to both Referrer and Referee in the case of a referral.
+    * @title Extra milli percentage split between the Referrer and Referee in the case of a referral.
     */
     uint32 public referralMilliPercentage;
 
