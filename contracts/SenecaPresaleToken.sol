@@ -6,15 +6,38 @@ import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 
-contract MyToken is ERC20, Pausable, Multicall, AccessControl {
+/**
+* @title Presale token which will be used to get allocated SNCA tokens.
+* @dev A custom ERC20 token with additional round configuration functionality. 
+* @notice Regular users can not transfer their presale tokens, they can (eventually) burn
+          them to get their SNCA tokens.
+*/
+contract SenecaPresaleToken is ERC20, Pausable, Multicall, AccessControl {
     
+    /**
+    * @dev Only an address with Distributor Role can transfer tokens and approve allowance. 
+    */
     bytes32 public constant DISTRIBUTOR_ROLE = keccak256("DISTRIBUTOR_ROLE");
-
+    
+    /**
+    * @dev All addresses can burn when this flag is set to true. 
+    */
     bool public burnAllowed;
 
-    // Upper cap of USD 4294 
+    /**
+    * @title pSNCA Token cost in milli cents.
+    * @dev Upper limit of USD 4294.
+    */
     uint32 public tokenCostMilliCents;
+
+    /**
+    * @title Extra milli percentage split between the Referrer and Referee in the case of a referral.
+    */
     uint32 public referralMilliPercentage;
+
+    /**
+    * @title Minimum and Maximum token allowed to be distributed per address.
+    */
     uint32 public minMilliTokenContribution;
     uint32 public maxMilliTokenContribution;
 
@@ -23,11 +46,18 @@ contract MyToken is ERC20, Pausable, Multicall, AccessControl {
         uint32 percentage;
     }
 
+    /**
+    * @notice Bonus percentages based on the initial token amount bought.
+    */
     bonus[] public bonusValues;
 
-    // Upper cap of 1.8446744e+16
+    /**
+    * @dev Upper limit for tokens. Max value after adjusting for decimal: 1.8446744e+16.
+    */
     uint64 public maxTotalSupply;
 
+    // @param distributor Token Sale's Distributor Address.
+    // @param _maxTotalSupply Upper Cap on Token Supply.
     constructor(address distributor, uint64 _maxTotalSupply) ERC20("SenecaPresale", "pSNCA") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(DISTRIBUTOR_ROLE, msg.sender);        
@@ -45,11 +75,14 @@ contract MyToken is ERC20, Pausable, Multicall, AccessControl {
         
         require(
             totalSupply() + amount <= maxTotalSupply, 
-            "Can't mint, total supply would exceed maxTotalSupply"
+            "Can't mint, total supply would exceed maxTotalSupply."
         );
         _mint(to, amount);
     }
 
+    /**
+    * @notice Only address with Admin Role can pause or unpause.
+    */
     function pause() public onlyRole(DEFAULT_ADMIN_ROLE) {
         _pause();
     }
@@ -86,15 +119,25 @@ contract MyToken is ERC20, Pausable, Multicall, AccessControl {
         address account,
         uint256 amount
     ) internal override {
-        require(burnAllowed, "Burn not allowed");
+        require(burnAllowed, "Burn not allowed.");
 
         super._burn(account, amount);
     }
 
+    /**
+    * @dev Set burnAllowed which is required to be true for allowing burning.
+    * @notice Only address with Admin Role can call.
+    */
     function setBurnStatus(bool _burnAllowed) public onlyRole(DEFAULT_ADMIN_ROLE) {
         burnAllowed = _burnAllowed;
     }
 
+
+    /**
+    * @title Start a round of the Token Sale with updated configuration values.
+    * @dev `amount` gets minted to `distributor` address.
+    * @notice Only address with Admin Role can call.
+    */
     function setRound( 
         address distributor,
         uint256 amount,
@@ -105,7 +148,10 @@ contract MyToken is ERC20, Pausable, Multicall, AccessControl {
         uint32[] memory milliAmounts,
         uint32[] memory milliPercentages
     ) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(milliAmounts.length == milliPercentages.length);
+        require(
+            milliAmounts.length == milliPercentages.length,
+            "Length of arrays milliAmounts and milliPercentages must be same"
+        );
 
         _mint(distributor, amount);
         tokenCostMilliCents = _tokenCostMilliCents;
